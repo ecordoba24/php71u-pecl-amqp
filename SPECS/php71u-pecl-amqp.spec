@@ -1,3 +1,5 @@
+# IUS spec file for php71u-pecl-amqp, forked from:
+#
 # Fedora spec file for php-pecl-amqp
 #
 # Copyright (c) 2012-2017 Remi Collet
@@ -6,35 +8,57 @@
 #
 # Please, preserve the changelog entries
 #
-%global with_zts    0%{?__ztsphp:1}
-%global with_tests  0%{?_with_tests:1}
+
 %global pecl_name   amqp
 %global ini_name    40-%{pecl_name}.ini
-#global prever      beta4
+%global php         php71u
+
+%bcond_without zts
+%bcond_with tests
 
 Summary:       Communicate with any AMQP compliant server
-Name:          php-pecl-amqp
+Name:          %{php}-pecl-amqp
 Version:       1.9.1
-Release:       3%{?dist}
+Release:       1.ius%{?dist}
 License:       PHP
 Group:         Development/Languages
 URL:           http://pecl.php.net/package/amqp
 Source0:       http://pecl.php.net/get/%{pecl_name}-%{version}%{?prever}.tgz
 
-BuildRequires: php-devel > 5.3
-BuildRequires: php-pear
+BuildRequires: %{php}-devel
+BuildRequires: pecl >= 1.10.0
 BuildRequires: pkgconfig(librabbitmq) >= 0.5.2
-%if %{with_tests}
+%if %{with tests}
 BuildRequires: rabbitmq-server
 %endif
 
 Requires:      php(zend-abi) = %{php_zend_api}
 Requires:      php(api) = %{php_core_api}
+Requires(post): pecl >= 1.10.0
+Requires(postun): pecl >= 1.10.0
 
-Provides:      php-%{pecl_name}               = %{version}
-Provides:      php-%{pecl_name}%{?_isa}       = %{version}
-Provides:      php-pecl(%{pecl_name})         = %{version}
+# provide the stock name
+Provides:      php-pecl-%{pecl_name} = %{version}
+Provides:      php-pecl-%{pecl_name}%{?_isa} = %{version}
+
+# provide the stock and IUS names without pecl
+Provides:      php-%{pecl_name} = %{version}
+Provides:      php-%{pecl_name}%{?_isa} = %{version}
+Provides:      %{php}-%{pecl_name} = %{version}
+Provides:      %{php}-%{pecl_name}%{?_isa} = %{version}
+
+# provide the stock and IUS names in pecl() format
+Provides:      php-pecl(%{pecl_name}) = %{version}
 Provides:      php-pecl(%{pecl_name})%{?_isa} = %{version}
+Provides:      %{php}-pecl(%{pecl_name}) = %{version}
+Provides:      %{php}-pecl(%{pecl_name})%{?_isa} = %{version}
+
+# conflict with the stock name
+Conflicts:     php-pecl-%{pecl_name} < %{version}
+
+%{?filter_provides_in: %filter_provides_in %{php_extdir}/.*\.so$}
+%{?filter_provides_in: %filter_provides_in %{php_ztsextdir}/.*\.so$}
+%{?filter_setup}
 
 
 %description
@@ -53,7 +77,7 @@ sed -e 's/role="test"/role="src"/' \
     -i package.xml
 
 mv %{pecl_name}-%{version}%{?prever} NTS
-cd NTS
+pushd NTS
 sed -e 's/CFLAGS="-I/CFLAGS="$CFLAGS -I/' -i config.m4
 
 # Upstream often forget to change this
@@ -62,7 +86,7 @@ if test "x${extver}" != "x%{version}%{?prever}"; then
    : Error: Upstream version is ${extver}, expecting %{version}%{?prever}.
    exit 1
 fi
-cd ..
+popd
 
 cat > %{ini_name} << 'EOF'
 ; Enable %{pecl_name} extension module
@@ -110,22 +134,24 @@ extension = %{pecl_name}.so
 ;amqp.verify = ''
 EOF
 
-%if %{with_zts}
+%if %{with zts}
 cp -pr NTS ZTS
 %endif
 
 
 %build
-cd NTS
+pushd NTS
 %{_bindir}/phpize
 %configure --with-php-config=%{_bindir}/php-config
 make %{?_smp_mflags}
+popd
 
-%if %{with_zts}
-cd ../ZTS
+%if %{with zts}
+pushd ZTS
 %{_bindir}/zts-phpize
 %configure --with-php-config=%{_bindir}/zts-php-config
 make %{?_smp_mflags}
+popd
 %endif
 
 
@@ -136,18 +162,19 @@ make -C NTS install INSTALL_ROOT=%{buildroot}
 install -Dpm 644 %{ini_name} %{buildroot}%{php_inidir}/%{ini_name}
 
 # Install XML package description
-install -Dpm 644 package.xml %{buildroot}%{pecl_xmldir}/%{name}.xml
+install -Dpm 644 package.xml %{buildroot}%{pecl_xmldir}/%{pecl_name}.xml
 
-%if %{with_zts}
+%if %{with zts}
 make -C ZTS install INSTALL_ROOT=%{buildroot}
 install -Dpm 644 %{ini_name} %{buildroot}%{php_ztsinidir}/%{ini_name}
 %endif
 
 # Documentation
-cd NTS
+pushd NTS
 for i in $(grep 'role="doc"' ../package.xml | sed -e 's/^.*name="//;s/".*$//')
 do install -Dpm 644 $i %{buildroot}%{pecl_docdir}/%{pecl_name}/$i
 done
+popd
 
 
 %check
@@ -156,14 +183,14 @@ done
     --define extension=NTS/modules/%{pecl_name}.so \
     -m | grep %{pecl_name}
 
-%if %{with_zts}
+%if %{with zts}
 : Minimal load test for ZTS extension
 %{__ztsphp} --no-php-ini \
     --define extension=ZTS/modules/%{pecl_name}.so \
     -m | grep %{pecl_name}
 %endif
 
-%if %{with_tests}
+%if %{with tests}
 mkdir log run base
 : Launch the RabbitMQ service
 export RABBITMQ_PID_FILE=$PWD/run/pid
@@ -182,7 +209,7 @@ REPORT_EXIT_STATUS=1 \
 %{__php} -n run-tests.php --show-diff || ret=1
 popd
 
-%if %{with_zts}
+%if %{with zts}
 pushd ZTS
 : Run the upstream test Suite for ZTS extension
 TEST_PHP_EXECUTABLE=%{__ztsphp} \
@@ -203,21 +230,38 @@ exit $ret
 %endif
 
 
+%if 0%{?pecl_install:1}
+%post
+%{pecl_install} %{pecl_xmldir}/%{pecl_name}.xml >/dev/null || :
+%endif
+
+
+%if 0%{?pecl_uninstall:1}
+%postun
+if [ $1 -eq 0 ]; then
+    %{pecl_uninstall} %{pecl_name} >/dev/null || :
+fi
+%endif
+
+
 %files
 %license NTS/LICENSE
 %doc %{pecl_docdir}/%{pecl_name}
-%{pecl_xmldir}/%{name}.xml
+%{pecl_xmldir}/%{pecl_name}.xml
 
 %config(noreplace) %{php_inidir}/%{ini_name}
 %{php_extdir}/%{pecl_name}.so
 
-%if %{with_zts}
+%if %{with zts}
 %config(noreplace) %{php_ztsinidir}/%{ini_name}
 %{php_ztsextdir}/%{pecl_name}.so
 %endif
 
 
 %changelog
+* Wed Sep 13 2017 Carl George <carl@george.computer> - 1.9.1-1.ius
+- Port from Fedora to IUS
+
 * Thu Aug 03 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.9.1-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
 
