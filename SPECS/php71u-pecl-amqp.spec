@@ -29,7 +29,8 @@ BuildRequires: %{php}-devel
 BuildRequires: pecl >= 1.10.0
 BuildRequires: pkgconfig(librabbitmq) >= 0.5.2
 %if %{with tests}
-BuildRequires: rabbitmq-server
+# https://github.com/pdezwart/php-amqp/pull/234
+BuildRequires: rabbitmq-server >= 3.4.0
 %endif
 
 Requires:      php(zend-abi) = %{php_zend_api}
@@ -267,6 +268,7 @@ fi
 * Wed Sep 13 2017 Carl George <carl@george.computer> - 1.9.1-1.ius
 - Port from Fedora to IUS
 - Use a random port and node name to avoid conflicts during test suite
+- Set minimum rabbitmq-server version for test suite
 
 * Thu Aug 03 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.9.1-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
