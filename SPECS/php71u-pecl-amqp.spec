@@ -19,14 +19,21 @@
 Summary:       Communicate with any AMQP compliant server
 Name:          %{php}-pecl-amqp
 Version:       1.9.3
-Release:       1.ius%{?dist}
+Release:       2.ius%{?dist}
 License:       PHP
 Group:         Development/Languages
 URL:           http://pecl.php.net/package/amqp
 Source0:       http://pecl.php.net/get/%{pecl_name}-%{version}%{?prever}.tgz
 
 BuildRequires: %{php}-devel
-BuildRequires: pecl >= 1.10.0
+
+BuildRequires: pear1u
+# explicitly require pear dependencies to avoid conflicts
+BuildRequires: %{php}-cli
+BuildRequires: %{php}-common
+BuildRequires: %{php}-process
+BuildRequires: %{php}-xml
+
 BuildRequires: pkgconfig(librabbitmq) >= 0.5.2
 %if %{with tests}
 # https://github.com/pdezwart/php-amqp/pull/234
@@ -35,8 +42,6 @@ BuildRequires: rabbitmq-server >= 3.4.0
 
 Requires:      php(zend-abi) = %{php_zend_api}
 Requires:      php(api) = %{php_core_api}
-Requires(post): pecl >= 1.10.0
-Requires(postun): pecl >= 1.10.0
 
 # provide the stock name
 Provides:      php-pecl-%{pecl_name} = %{version}
@@ -236,18 +241,22 @@ exit $ret
 %endif
 
 
-%if 0%{?pecl_install:1}
-%post
-%{pecl_install} %{pecl_xmldir}/%{pecl_name}.xml >/dev/null || :
-%endif
+%triggerin -- pear1u
+if [ -x %{__pecl} ]; then
+    %{pecl_install} %{pecl_xmldir}/%{pecl_name}.xml >/dev/null || :
+fi
 
 
-%if 0%{?pecl_uninstall:1}
+%posttrans
+if [ -x %{__pecl} ]; then
+    %{pecl_install} %{pecl_xmldir}/%{pecl_name}.xml >/dev/null || :
+fi
+
+
 %postun
-if [ $1 -eq 0 ]; then
+if [ $1 -eq 0 -a -x %{__pecl} ]; then
     %{pecl_uninstall} %{pecl_name} >/dev/null || :
 fi
-%endif
 
 
 %files
@@ -265,6 +274,9 @@ fi
 
 
 %changelog
+* Wed Jan 31 2018 Carl George <carl@george.computer> - 1.9.3-2.ius
+- Remove pear requirement and update scriptlets (adapted from remirepo)
+
 * Thu Oct 19 2017 Ben Harper <ben.harper@rackspace.com> - 1.9.3-1.ius
 - Latest upstream
 
