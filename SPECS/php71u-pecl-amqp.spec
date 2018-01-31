@@ -144,14 +144,14 @@ cp -pr NTS ZTS
 pushd NTS
 %{_bindir}/phpize
 %configure --with-php-config=%{_bindir}/php-config
-make %{?_smp_mflags}
+%make_build
 popd
 
 %if %{with zts}
 pushd ZTS
 %{_bindir}/zts-phpize
 %configure --with-php-config=%{_bindir}/zts-php-config
-make %{?_smp_mflags}
+%make_build
 popd
 %endif
 
@@ -181,13 +181,13 @@ popd
 %check
 : Minimal load test for NTS extension
 %{__php} --no-php-ini \
-    --define extension=NTS/modules/%{pecl_name}.so \
+    --define extension=%{buildroot}%{php_extdir}/%{pecl_name}.so \
     -m | grep %{pecl_name}
 
 %if %{with zts}
 : Minimal load test for ZTS extension
 %{__ztsphp} --no-php-ini \
-    --define extension=ZTS/modules/%{pecl_name}.so \
+    --define extension=%{buildroot}%{php_ztsextdir}/%{pecl_name}.so \
     -m | grep %{pecl_name}
 %endif
 
