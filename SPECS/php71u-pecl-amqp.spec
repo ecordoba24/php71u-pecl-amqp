@@ -19,7 +19,7 @@
 Summary:       Communicate with any AMQP compliant server
 Name:          %{php}-pecl-amqp
 Version:       1.9.3
-Release:       2.ius%{?dist}
+Release:       3.ius%{?dist}
 License:       PHP
 Group:         Development/Languages
 URL:           http://pecl.php.net/package/amqp
@@ -274,6 +274,9 @@ fi
 
 
 %changelog
+* Tue May 15 2018 Carl George <carl@george.computer> - 1.9.3-3.ius
+- Rebuild for EL7.5
+
 * Wed Jan 31 2018 Carl George <carl@george.computer> - 1.9.3-2.ius
 - Remove pear requirement and update scriptlets (adapted from remirepo)
 
