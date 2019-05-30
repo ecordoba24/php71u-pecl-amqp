@@ -19,21 +19,14 @@
 Summary:       Communicate with any AMQP compliant server
 Name:          %{php}-pecl-amqp
 Version:       1.9.3
-Release:       3.ius%{?dist}
+Release:       4%{?dist}
 License:       PHP
-Group:         Development/Languages
-URL:           http://pecl.php.net/package/amqp
-Source0:       http://pecl.php.net/get/%{pecl_name}-%{version}%{?prever}.tgz
+URL:           https://pecl.php.net/package/amqp
+Source0:       https://pecl.php.net/get/%{pecl_name}-%{version}%{?prever}.tgz
 
 BuildRequires: %{php}-devel
-
-BuildRequires: pear1u
-# explicitly require pear dependencies to avoid conflicts
-BuildRequires: %{php}-cli
-BuildRequires: %{php}-common
-BuildRequires: %{php}-process
-BuildRequires: %{php}-xml
-
+# build require pear1's dependencies to avoid mismatched php stacks
+BuildRequires: pear1 %{php}-cli %{php}-common %{php}-xml
 BuildRequires: pkgconfig(librabbitmq) >= 0.5.2
 %if %{with tests}
 # https://github.com/pdezwart/php-amqp/pull/234
@@ -241,7 +234,7 @@ exit $ret
 %endif
 
 
-%triggerin -- pear1u
+%triggerin -- pear1
 if [ -x %{__pecl} ]; then
     %{pecl_install} %{pecl_xmldir}/%{pecl_name}.xml >/dev/null || :
 fi
@@ -274,6 +267,9 @@ fi
 
 
 %changelog
+* Thu May 30 2019 Carl George <carl@george.computer> - 1.9.3-4
+- Build with pear1 instead of pear1u
+
 * Tue May 15 2018 Carl George <carl@george.computer> - 1.9.3-3.ius
 - Rebuild for EL7.5
 
