@@ -18,7 +18,7 @@
 
 Summary:       Communicate with any AMQP compliant server
 Name:          %{php}-pecl-amqp
-Version:       1.9.3
+Version:       1.9.4
 Release:       4%{?dist}
 License:       PHP
 URL:           https://pecl.php.net/package/amqp
@@ -267,6 +267,9 @@ fi
 
 
 %changelog
+* Thu Oct 03 2019 Eugenio Cordoba <e.cordoba.24@gmail.com> - 1.9.4-1
+- Update to 1.9.4
+
 * Thu May 30 2019 Carl George <carl@george.computer> - 1.9.3-4
 - Build with pear1 instead of pear1u
 
