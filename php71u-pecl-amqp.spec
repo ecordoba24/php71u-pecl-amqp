@@ -19,7 +19,7 @@
 Summary:       Communicate with any AMQP compliant server
 Name:          %{php}-pecl-amqp
 Version:       1.9.4
-Release:       4%{?dist}
+Release:       2%{?dist}
 License:       PHP
 URL:           https://pecl.php.net/package/amqp
 Source0:       https://pecl.php.net/get/%{pecl_name}-%{version}%{?prever}.tgz
@@ -27,7 +27,7 @@ Source0:       https://pecl.php.net/get/%{pecl_name}-%{version}%{?prever}.tgz
 BuildRequires: %{php}-devel
 # build require pear1's dependencies to avoid mismatched php stacks
 BuildRequires: pear1 %{php}-cli %{php}-common %{php}-xml
-BuildRequires: pkgconfig(librabbitmq) >= 0.5.2
+BuildRequires: pkgconfig(librabbitmq) >= 0.7.1
 %if %{with tests}
 # https://github.com/pdezwart/php-amqp/pull/234
 BuildRequires: rabbitmq-server >= 3.4.0
@@ -131,6 +131,7 @@ extension = %{pecl_name}.so
 ;amqp.cert = ''
 ;amqp.key = ''
 ;amqp.verify = ''
+;amqp.sasl_method = 0
 EOF
 
 %if %{with zts}
@@ -267,6 +268,10 @@ fi
 
 
 %changelog
+* Thu Oct 03 2019 Eugenio Cordoba <e.cordoba.24@gmail.com> - 1.9.4-2
+- Update minimum librabbitmq version
+- add variable
+
 * Thu Oct 03 2019 Eugenio Cordoba <e.cordoba.24@gmail.com> - 1.9.4-1
 - Update to 1.9.4
 
